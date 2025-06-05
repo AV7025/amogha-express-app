@@ -3,26 +3,62 @@ const favicon = require('serve-favicon');
 const path = require('path');
 const utils = require('./utils');
 
-// fn to create express server
-const create = async () => {
-
-    // server
+const create = () => {
     const app = express();
+
+    // Serve favicon
     app.use(favicon(path.join(__dirname, '../public', 'favicon.ico')));
-    
-    // Log request
+
+    // Request logger
     app.use(utils.appLogger);
 
-    // root route - serve static file
+    // Middleware to handle form POST submissions
+    app.use(express.urlencoded({ extended: true }));
+
+    // --- Core API & Static Routes ---
     app.get('/api/hello', (req, res) => {
-        res.json({hello: 'goodbye'});
+        res.json({ hello: 'goodbye' });
         res.end();
     });
 
-    // root route - serve static file
-    app.get('/', (req, res) => res.sendFile(path.join(__dirname, '../public/client.html')));
+    // Static homepage
+    app.get('/', (req, res) =>
+        res.sendFile(path.join(__dirname, '../public/client.html'))
+    );
 
-    // Catch errors
+    // --- Simulated User Routes for Load Testing ---
+
+    app.get('/login', (req, res) => {
+        res.send('<h3>Login Page - Simulated</h3>');
+    });
+
+    app.get('/dashboard', (req, res) => {
+        res.send('<h3>User Dashboard - Simulated Data</h3>');
+    });
+
+    app.get('/search', (req, res) => {
+        res.send('<h3>Search Results - Simulated</h3>');
+    });
+
+    app.get('/form', (req, res) => {
+        res.send(`
+            <form method="POST" action="/submit">
+                <input name="name" placeholder="Enter Name" required />
+                <button type="submit">Submit</button>
+            </form>
+        `);
+    });
+
+    app.post('/submit', (req, res) => {
+        const name = req.body.name || 'Anonymous';
+        res.send(`<h3>Form submitted by: ${name}</h3>`);
+    });
+
+    app.get('/logout', (req, res) => {
+        res.send('<h3>User logged out</h3>');
+    });
+
+    // --- Error Handling ---
     app.use(utils.logErrors);
     app.use(utils.clientError404Handler);
     app.use(utils.clientError500Handler);
